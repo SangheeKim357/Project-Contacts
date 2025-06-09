@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+  "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.orm.himedia.project_phonebook.DAO.ContactDAO">
+
+	<select id="getAllContacts"
+		resultType="com.orm.himedia.project_phonebook.DTO.ContactDTO">
+		SELECT * FROM contacts ORDER BY created DESC
+	</select>
+
+	<select id="getContactById"
+		resultType="com.orm.himedia.project_phonebook.DTO.ContactDTO"
+		parameterType="int">
+		SELECT * FROM contacts WHERE id = #{id}
+	</select>
+
+	<insert id="insertContact"
+		parameterType="com.orm.himedia.project_phonebook.DTO.ContactDTO">
+		INSERT INTO contacts (name, phone, home, company, email, `group`, memo,
+		address, birthday, favorite, image)
+		VALUES (#{name}, #{phone}, #{home}, #{company}, #{email}, #{group}, #{memo},
+		#{address}, #{birthday}, #{favorite}, #{image})
+	</insert>
+
+	<update id="updateContact"
+		parameterType="com.orm.himedia.project_phonebook.DTO.ContactDTO">
+		UPDATE contacts
+		SET name = #{name},
+		phone = #{phone},
+		home = #{home},
+		company = #{company},
+		email = #{email},
+		`group` = #{group},
+		memo = #{memo},
+		address = #{address},
+		birthday = #{birthday},
+		favorite = #{favorite},
+		image = #{image},
+		updated = CURRENT_TIMESTAMP
+		WHERE id = #{id}
+	</update>
+
+	<delete id="deleteContact" parameterType="int">
+		DELETE FROM contacts WHERE id = #{id}
+	</delete>
+
+	<select id="search"
+		resultType="com.orm.himedia.project_phonebook.DTO.ContactDTO">
+		SELECT *
+		FROM contacts
+		WHERE name LIKE CONCAT('%', #{name}, '%')
+		OR REPLACE(phone, '-', '') LIKE CONCAT('%', #{phone}, '%')
+		OR home LIKE CONCAT('%', #{home}, '%')
+		OR company LIKE CONCAT('%', #{company}, '%')
+		OR memo LIKE CONCAT('%', #{memo}, '%')
+	</select>
+
+
+	<select id="getFavoriteContacts"
+		resultType="com.orm.himedia.project_phonebook.DTO.ContactDTO">
+		SELECT id, name, phone, `group`, favorite FROM contacts
+		WHERE favorite = TRUE
+	</select>
+
+	<update id="updateFavoriteStatus">
+		UPDATE contacts SET favorite = #{favorite} WHERE id =
+		#{contactId}
+	</update>
+
+	<select id="getAllGroupsWithMemberCount"
+		resultType="java.util.Map">
+		SELECT
+		c.`group` AS name,
+		COUNT(c.id) AS memberCount
+		FROM
+		contacts c
+		WHERE c.`group` IS NOT NULL AND c.`group` != ''
+		GROUP BY
+		c.`group`
+		ORDER BY c.`group` ASC
+	</select>
+
+	<insert id="createGroup">
+		SELECT 1
+	</insert>
+
+	<update id="renameGroup">
+		UPDATE contacts SET `group` = #{newGroupName} WHERE
+		`group` =
+		#{oldGroupName}
+	</update>
+
+	<update id="deleteGroup">
+		UPDATE contacts SET `group` = NULL WHERE `group` =
+		#{groupName}
+	</update>
+
+	<select id="getAllContactsForGroupAssignment"
+		resultType="com.orm.himedia.project_phonebook.DTO.ContactDTO">
+		SELECT id, name, phone, `group`, favorite FROM contacts
+		ORDER BY name ASC
+	</select>
+
+	<select id="getContactsByGroup"
+		resultType="com.orm.himedia.project_phonebook.DTO.ContactDTO">
+		SELECT id, name, phone, `group`, favorite FROM contacts
+		WHERE `group` =
+		#{groupName}
+		<if test="sortBy != null and sortBy != ''">
+			ORDER BY
+			<choose>
+				<when test="sortBy == 'name'">name</when>
+				<when test="sortBy == 'created'">created</when>
+				<otherwise>name</otherwise>
+			</choose>
+			<if test="sortOrder == 'desc'">DESC</if>
+			<if test="sortOrder == 'asc'">ASC</if>
+		</if>
+		<if test="sortBy == null or sortBy == ''">
+			ORDER BY name ASC
+		</if>
+	</select>
+
+	<update id="updateContactGroup">
+		UPDATE contacts SET `group` = #{group} WHERE id =
+		#{id}
+	</update>
+
+	<delete id="deleteContactsByIds" parameterType="java.util.List">
+		DELETE FROM contacts
+		WHERE id IN
+		<foreach collection="ids" item="id" open="(" close=")"
+			separator=",">
+			#{id}
+		</foreach>
+	</delete>
+
+	<update id="updateContactFavorite">
+        UPDATE contacts
+        SET
+            favorite = #{favorite},
+            updated = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>
